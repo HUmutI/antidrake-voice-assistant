@@ -31,7 +31,7 @@ def respond(response_text):
     sound = AudioSegment.from_mp3("response.mp3")
     sound.export("response.wav", format="wav")
     winsound.PlaySound("response.wav", winsound.SND_FILENAME)
-    # os.system("afplay response.mp3") for non-windows
+  
 
 tasks = []
 listeningToTask = False
@@ -39,11 +39,10 @@ listeningToTask = False
 def main():
     global tasks
     global listeningToTask
-    # respond("Hello, Jake. I hope you're having a nice day today.")
     while True:
         command = listen_for_command()
 
-        triggerKeyword = "jake"
+        triggerKeyword = "steven"
 
         
         if command and triggerKeyword in command:
@@ -63,7 +62,7 @@ def main():
                 respond("I took a screenshot for you.")
             elif "open chrome" in command:
                 respond("Opening Chrome.")
-                webbrowser.open("http://www.youtube.com/@JakeEh")
+                webbrowser.open("http://www.youtube.com/")
             elif "exit" in command:
                 respond("Goodbye!")
                 break
