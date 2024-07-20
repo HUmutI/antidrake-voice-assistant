@@ -1,4 +1,4 @@
-# antidrake-voice-assistant
+# antidrake-voice-assistant (voice_assist_tr is the main code!)
 Some notes:
 
 1) .cache spotify access token'i kaydediyor ki kod her çalıştığında tekrardan spotifya giriş yapmak zorunda kalmayalım. (GITHUB'da gözükmemesi için .cache'i boş yüklicem)
