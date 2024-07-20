@@ -8,6 +8,7 @@ import spotipy
 from dotenv import load_dotenv
 import os
 import requests
+from twilio.rest import Client
 
 load_dotenv()
 
@@ -15,6 +16,11 @@ clientID = os.getenv("CLIENT_ID")
 clientSecret = os.getenv("CLIENT_SECRET")
 username = os.getenv("USERNAME")
 weather_api_key = os.getenv("WEATHER_API_KEY")
+twilio_account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+twilio_auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+twilio_whatsapp_number = os.getenv("TWILIO_WHATSAPP_NUMBER")
+my_phone_number = os.getenv("MY_PHONE_NUMBER") 
+
 
 redirect_uri = 'http://google.com/callback/'
 scope = 'user-modify-playback-state user-read-playback-state user-read-currently-playing'
@@ -23,6 +29,16 @@ token_dict = oauth_object.get_access_token()
 token = token_dict['access_token'] 
 spotifyObject = spotipy.Spotify(auth=token) 
 user_name = spotifyObject.current_user() 
+
+
+def send_whatsapp_message(to, message):
+    client = Client(twilio_account_sid, twilio_auth_token)
+    message = client.messages.create(
+        body=message,
+        from_=twilio_whatsapp_number,
+        to=f"whatsapp:+{to}"
+    )
+    return message.sid
 
 openweather_conditions_en = ["clear sky","few clouds","scattered clouds","broken clouds",
                              "shower rain","rain","thunderstorm","snow","mist"]
@@ -74,10 +90,11 @@ def respond(response_text):
     tts = gTTS(text=response_text, lang='tr',slow=False)
     tts.save("response.mp3")
     sound = AudioSegment.from_mp3("response.mp3")
-    speedup_sound = sound.speedup(playback_speed=1.2)
+    speedup_sound = sound.speedup(playback_speed=1.3)
     speedup_sound.export("response.wav", format="wav")
     winsound.PlaySound("response.wav", winsound.SND_FILENAME)
     
+  
 def main():
     ss_count = 1
     while True:
@@ -110,14 +127,29 @@ def main():
                 song = song_items[0]['external_urls']['spotify'] 
                 respond("şarkı açılıyor")
                 webbrowser.open(song)
+                
             elif "şarkı" in command and "dur" in command:
                 spotifyObject.pause_playback()
                 respond("Şarkı durduruldu.")
+            
             elif "şarkı" in command and "devam" in command:
                 spotifyObject.start_playback()
                 respond("Devam ediyor.")
-            elif "arama yap" in command:
-                respond("Ne aramak istersiniz?")
+                
+            elif "şarkı" in command and "geç" in command:
+                spotifyObject.next_track()
+                respond("Şarkı atlandı") 
+                
+            elif "kaydet" in command:
+                respond("Kime mesaj göndermek istersiniz?")
+                respond("Mesajınız nedir?")
+                message = listen_for_command()
+                if message:
+                    send_whatsapp_message(my_phone_number, message)
+                    respond("Whatsapp'ına mesaj gönderildi.")
+            
+            elif "ara" in command:
+                respond("Ne aramak istersin?")
                 search_query = listen_for_command()
                 if search_query:
                     url = f"https://www.google.com/search?q={search_query}"
