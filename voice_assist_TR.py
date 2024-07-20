@@ -38,7 +38,7 @@ listeningToTask = False
 def main():
     global tasks
     global listeningToTask
-
+    ss_count = 1
     while True:
         command = listen_for_command()
 
@@ -56,18 +56,19 @@ def main():
                 respond("Tabii. Görevleriniz şunlar:")
                 for task in tasks:
                     respond(task)
-            elif "ekran görüntüsü al" in command:
-                pyautogui.screenshot("screenshot.png")
-                respond("Sizin için bir ekran görüntüsü aldım.")
-            elif "chrome'u aç" in command:
-                respond("Chrome'u açıyorum.")
+            elif ("ekran görüntüsü al" in command) or ("ss al" in command):
+                pyautogui.screenshot(f"screenshot{ss_count}.png")
+                ss_count += 1
+                respond("Ekran görüntüsü alındı.")
+            elif "chrome" in command and "aç" in command:
                 webbrowser.open("https://www.youtube.com/watch?v=JTk5pxI5loY")
+                respond("Chrome'u açıyorum.")
             elif "çıkış" in command:
                 respond("Hoşça kal!")
                 break
             else:
-                respond("Üzgünüm, bu komutu nasıl işleme alacağımı bilmiyorum.")
+                respond("Anlayamadım.")
 
 if __name__ == "__main__":
-    respond("asistanlar niye hep kız sesi amk")
+    respond("Selam ben alper")
     main()
