@@ -10,6 +10,8 @@ import os
 import requests
 from twilio.rest import Client
 from googletrans import Translator 
+import os
+
 
 #.env dosyasındaki api keylerini ve diğer verileri çekenzi ki kodda secret keyler falan gözükmesin.
 load_dotenv()
@@ -74,6 +76,23 @@ def get_weather(city):
         return "Hava durumu bilgisi alınamadı. Lütfen daha sonra tekrar deneyin."
 
 #çeviri özelliği için
+
+languages = {
+    'arapça': 'ar',
+    'çince': 'zh-cn',
+    'ingilizce': 'en',
+    'fransızca': 'fr',
+    'almanca': 'de',
+    'italyanca': 'it',
+    'japonca': 'ja',
+    'korece': 'ko',
+    'latince': 'la',
+    'portekizce': 'pt',
+    'rusça': 'ru',
+    'ispanyolca': 'es',
+    'türkçe': 'tr',
+}
+
 def translate_text(text, target_language):
     translator = Translator()
     try:
@@ -88,13 +107,14 @@ def listen_for_command():
 
     with sr.Microphone() as source:
         print("Komutlar dinleniyor...")
-        recognizer.adjust_for_ambient_noise(source)
+        recognizer.adjust_for_ambient_noise(source,duration=0.1)
         audio = recognizer.listen(source)
 
     try:
         command = recognizer.recognize_google(audio, language='tr-TR')
         print("Dediğiniz:", command)
-        return command.lower()
+        corrected_command = command.replace('İ', 'i').lower()
+        return corrected_command
     except sr.UnknownValueError:
         print("Sesi anlayamadım. Lütfen tekrar deneyin.")
         return None
@@ -104,9 +124,9 @@ def listen_for_command():
 
 #Alperin konuşmasını sağlayan fonksiyon (text to speech)
 #burda gTTS lib'i sadece mp3'ü destekliyo ama winsound lib'i de sadece wav, o yüzden response.mp3 ve response.wav oluşturuluyo aslında ikisi de aynı ses.
-def respond(response_text):
+def respond(response_text,lang):
     print(response_text)
-    tts = gTTS(text=response_text, lang='tr',slow=False)
+    tts = gTTS(text=response_text, lang=lang,slow=False)
     tts.save("response.mp3")
     sound = AudioSegment.from_mp3("response.mp3")
     speedup_sound = sound.speedup(playback_speed=1.2)
@@ -125,30 +145,28 @@ def main():
         if command and triggerKeyword in command:
             
             if "haber" in command or "nasılsın" in command or "yapıyosun" in command:
-                respond("İyiyim, sen nasılsın?")
+                respond("İyiyim, sen nasılsın?","tr")
                 
             elif ("ekran görüntüsü" in command) or ("ss al" in command):
                 pyautogui.screenshot(f"screenshot{ss_count}.png")
                 ss_count += 1
-                respond("Ekran görüntüsü alındı.")
+                respond("Ekran görüntüsü alındı.","tr")
                 
             elif "chrome" in command and "aç" in command:
                 webbrowser.open("https://www.youtube.com/watch?v=JTk5pxI5loY")
-                respond("Chrome'u açıyorum.")
+                respond("Chrome'u açıyorum.","tr")
                 
             elif "çevir" in command:
-                respond("Çevirilecek ifadeyi söyle")
+                respond("Çevirilecek ifadeyi söyle","tr")
                 text_to_translate = listen_for_command()
-                respond("Hangi dile çevirmemi istersin?")
+                respond("Hangi dile çevirmemi istersin?","tr")
                 target_language = listen_for_command()
-                #burası değiştirilecek
-                if "Almanca" in target_language or "almanca" in target_language:
-                    target_language= "de"
+                target_language = languages[target_language]
                 translated_text = translate_text(text_to_translate, target_language)
-                respond(translated_text)
+                respond(translated_text,target_language)
                 
             elif "spotify" in command and "aç" in command:
-                respond("Hangi şarkıyı çalmamı istersin?")
+                respond("Hangi şarkıyı çalmamı istersin?","tr")
                 search_song = listen_for_command()
                 if "drake" in search_song:
                     search_song = "Not Like Us"
@@ -156,48 +174,48 @@ def main():
                 songs_dict = results['tracks'] 
                 song_items = songs_dict['items'] 
                 song = song_items[0]['external_urls']['spotify'] 
-                respond("şarkı açılıyor")
+                respond("şarkı açılıyor","tr")
                 webbrowser.open(song)
                 
             elif "şarkı" in command and "dur" in command:
                 spotifyObject.pause_playback()
-                respond("Şarkı durduruldu.")
+                respond("Şarkı durduruldu.","tr")
             
             elif "şarkı" in command and "devam" in command:
                 spotifyObject.start_playback()
-                respond("Devam ediyor.")
+                respond("Devam ediyor.","tr")
                 
             elif "şarkı" in command and "geç" in command:
                 spotifyObject.next_track()
-                respond("Şarkı atlandı") 
+                respond("Şarkı atlandı","tr") 
                 
             elif "kaydet" in command:
-                respond("Mesajın nedir?")
+                respond("Mesajın nedir?","tr")
                 message = listen_for_command()
                 if message:
                     send_whatsapp_message(my_phone_number, message)
-                    respond("Whatsapp'ına mesaj gönderildi.")
+                    respond("Whatsapp'ına mesaj gönderildi.","tr")
             
             elif "ara" in command:
-                respond("Ne aramak istersin?")
+                respond("Ne aramak istersin?","tr")
                 search_query = listen_for_command()
                 if search_query:
                     url = f"https://www.google.com/search?q={search_query}"
-                    respond("Arama yapılıyor")
+                    respond("Arama yapılıyor","tr")
                     webbrowser.open(url)
                     
             elif "hava durumu" in command:
-                respond("Hangi şehrin hava durumunu öğrenmek istersiniz?")
+                respond("Hangi şehrin hava durumunu öğrenmek istersin?","tr")
                 city = listen_for_command()
                 if city:
                     weather_info = get_weather(city)
-                    respond(weather_info)
+                    respond(weather_info,"tr")
                     
             elif "çıkış" in command:
-                respond("Hoşça kal!")
+                respond("Hoşça kal!","tr")
                 break
             elif "bilgisayar" in command and "kapat" in command:
-                respond("Emin misin")
+                respond("Emin misin","tr")
                 decision = listen_for_command()
                 if "evet" in decision:
                     os.system("shutdown /s /t 1") 
@@ -206,8 +224,8 @@ def main():
 
             
             else:
-                respond("Anlayamadım.")
+                respond("Anlayamadım.","tr")
 
 if __name__ == "__main__":
-    respond("Selam ben alper")
+    respond("Selam ben alper","tr")
     main()
